@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kitchen AI Agent</title>
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="app-wrapper">
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <h2>La tua Dispensa 🧊</h2>
+            </div>
+            <ul id="pantry-list"></ul>
+        </aside>
+        
+        <main class="chat-container">
+            <header class="chat-header">
+                <h1>🧑‍🍳 Chef AI</h1>
+                <span class="status-dot"></span> online
+            </header>
+            
+            <div id="chat-window">
+                <!-- I messaggi appariranno qui -->
+            </div>
+            
+            <div class="input-area">
+                <input type="text" id="user-input" placeholder="Scrivi gli ingredienti o chiedi una ricetta..." autocomplete="off">
+                <button id="send-btn">Invia</button>
+            </div>
+        </main>
+    </div>
+    <script src="script.js"></script>
+</body>
+</html>

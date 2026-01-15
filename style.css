@@ -1,0 +1,144 @@
+:root {
+    --primary: #27ae60;
+    --bg: #f8f9fa;
+    --dark: #2c3e50;
+    --user-msg: #dcf8c6;
+    --ai-msg: #ffffff;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body { 
+    font-family: 'Inter', sans-serif; 
+    background: var(--bg); 
+    color: var(--dark);
+}
+
+.app-wrapper {
+    display: flex;
+    height: 100vh;
+    overflow: hidden;
+}
+
+/* Sidebar */
+.sidebar {
+    width: 320px;
+    background: #ffffff;
+    border-right: 1px solid #e0e0e0;
+    display: flex;
+    flex-direction: column;
+}
+
+.sidebar-header {
+    padding: 25px;
+    background: var(--primary);
+    color: white;
+}
+
+#pantry-list {
+    list-style: none;
+    padding: 15px;
+    overflow-y: auto;
+}
+
+.pantry-item {
+    background: #f1f3f5;
+    padding: 12px;
+    border-radius: 8px;
+    margin-bottom: 10px;
+    border-left: 4px solid var(--primary);
+}
+
+.ing-name { font-weight: 600; display: block; }
+.ing-qty { color: #666; font-size: 0.9em; }
+.ing-expiry { font-size: 0.75em; color: #e74c3c; margin-top: 5px; }
+
+/* Chat Section */
+.chat-container {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+.chat-header {
+    padding: 15px 25px;
+    background: white;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.status-dot { width: 10px; height: 10px; background: #2ecc71; border-radius: 50%; }
+
+#chat-window {
+    flex: 1;
+    padding: 25px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    background: #e5ddd5; /* Chat background classico */
+}
+
+.msg-wrapper { display: flex; width: 100%; }
+.msg-wrapper.user { justify-content: flex-end; }
+
+.msg-bubble {
+    max-width: 70%;
+    padding: 12px 18px;
+    border-radius: 15px;
+    font-size: 0.95em;
+    line-height: 1.4;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+}
+
+.user .msg-bubble { background: var(--user-msg); border-top-right-radius: 2px; }
+.ai .msg-bubble { background: var(--ai-msg); border-top-left-radius: 2px; }
+
+/* Input */
+.input-area {
+    padding: 20px;
+    background: white;
+    display: flex;
+    gap: 12px;
+}
+
+input {
+    flex: 1;
+    padding: 12px 20px;
+    border: 1px solid #ddd;
+    border-radius: 25px;
+    outline: none;
+}
+
+button {
+    padding: 0 25px;
+    background: var(--primary);
+    color: white;
+    border: none;
+    border-radius: 25px;
+    cursor: pointer;
+    font-weight: 600;
+    transition: 0.3s;
+}
+
+button:hover { background: #219150; }
+
+/* Recipes Cards */
+.recipe-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 15px;
+    margin-top: 5px;
+}
+
+.recipe-card {
+    background: white;
+    border-radius: 10px;
+    overflow: hidden;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+}
+
+.recipe-card img { width: 100%; height: 100px; object-fit: cover; }
+.card-info { padding: 8px; font-size: 0.8em; text-align: center; }
