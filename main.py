@@ -1,8 +1,10 @@
 import os
 import json
-from typing import List, Optional, Dict
-from fastapi import FastAPI, HTTPException
+import re
+from typing import List, Dict, Optional
+from fastapi import FastAPI, Request
 from fastapi.staticfiles import StaticFiles
+from fastapi.responses import FileResponse, JSONResponse
 from pydantic import BaseModel
 from dotenv import load_dotenv
 from langchain_groq import ChatGroq
@@ -11,15 +13,16 @@ from langchain_community.chat_message_histories import ChatMessageHistory
 from duckduckgo_search import DDGS
 
 load_dotenv()
-app = FastAPI(title="Kitchen AI Agent")
+app = FastAPI()
 
 class Ingredient(BaseModel):
     name: str
-    quantity: str
-    expiry: Optional[str] = "N/D"
+    quantity: str = "?"
+    expiry: str = "?"
 
 class KitchenState(BaseModel):
     ingredients: List[Ingredient] = []
+    num_people: Optional[int] = None
 
 sessions_inventory: Dict[str, KitchenState] = {}
 sessions_history: Dict[str, ChatMessageHistory] = {}
@@ -27,76 +30,85 @@ sessions_history: Dict[str, ChatMessageHistory] = {}
 def fetch_dish_image(dish_name: str) -> str:
     try:
         with DDGS() as ddgs:
-            results = list(ddgs.images(f"{dish_name} recipe dish photography", max_results=1))
-            return results[0]['image'] if results else "https://via.placeholder.com/300?text=Piatto+Non+Trovato"
-    except:
-        return "https://via.placeholder.com/300?text=Errore+Caricamento"
+            results = list(ddgs.images(f"{dish_name} piatto gourmet", max_results=1))
+            return results[0]['image'] if results else "https://via.placeholder.com/90"
+    except: return "https://via.placeholder.com/90"
+
+def clean_extract_json(text: str) -> dict:
+    try:
+        match = re.search(r'\{.*\}', text, re.DOTALL)
+        if match: return json.loads(match.group())
+    except: pass
+    return {"action": "ask", "message": text, "updated_pantry": []}
 
 llm = ChatGroq(model_name="llama-3.1-8b-instant", temperature=0.1)
 
-SYSTEM_PROMPT = """
-Sei un Kitchen AI Agent esperto. Il tuo compito è aiutare l'utente con la sua dispensa.
-Regole:
-1. Identifica ingredienti (nome, quantità, scadenza) dai messaggi.
-2. Rispondi SEMPRE in formato JSON.
-3. Se proponi ricette (quando hai ingredienti a sufficienza), includi i nomi nel campo 'recipe_names'.
-Struttura JSON obbligatoria:
-{{
-    "action": "ask" o "generate_recipes",
-    "message": "testo della risposta",
-    "new_ingredients": [{{ "name": "...", "quantity": "...", "expiry": "..." }}],
-    "recipe_names": ["Nome Piatto 1", "Nome Piatto 2"]
-}}
+# --- PROMPT AGGIORNATO CON RICHIESTE SPECIFICHE ---
+SYSTEM_PROMPT = """Sei uno Chef Italiano stellato e meticoloso. 
+Il tuo obiettivo è gestire la tabella sidebar e preparare una cena perfetta.
+
+REGOLE DI CONVERSAZIONE:
+1. Se l'utente aggiunge ingredienti, aggiorna la tabella sidebar (updated_pantry).
+2. Prima di proporre qualsiasi ricetta, DEVI assicurarti di conoscere:
+   - La QUANTITÀ esatta di ogni ingrediente.
+   - La data di SCADENZA dei prodotti.
+   - Per QUANTE PERSONE bisogna cucinare.
+3. Finché questi dati non sono chiari, il tuo messaggio deve essere una domanda cordiale per ottenerli.
+4. Quando hai tutte le informazioni e il numero di persone, proponi 3 ricette calcolando le DOSI ESATTE per quel numero di persone.
+5. Nel messaggio parla SOLO come un umano. Niente codice o parentesi.
 """
 
-def get_agent_response(user_id: str, message: str):
-    if user_id not in sessions_inventory:
-        sessions_inventory[user_id] = KitchenState()
-        sessions_history[user_id] = ChatMessageHistory()
-
-    history = sessions_history[user_id]
-    prompt = ChatPromptTemplate.from_messages([
-        ("system", SYSTEM_PROMPT),
-        MessagesPlaceholder(variable_name="chat_history"),
-        ("human", "{input}"),
-        ("system", "Dispensa attuale: {inventory}")
-    ])
-
-    chain = prompt | llm
-    response = chain.invoke({
-        "input": message,
-        "chat_history": history.messages,
-        "inventory": sessions_inventory[user_id].json()
-    })
-
-    try:
-        data = json.loads(response.content)
-        for ing in data.get("new_ingredients", []):
-            sessions_inventory[user_id].ingredients.append(Ingredient(**ing))
-        
-        recipe_data = []
-        if data.get("action") == "generate_recipes" and "recipe_names" in data:
-            for name in data["recipe_names"]:
-                recipe_data.append({"name": name, "image": fetch_dish_image(name)})
-        
-        data["recipes_with_images"] = recipe_data
-        history.add_user_message(message)
-        history.add_ai_message(data["message"])
-        return data, sessions_inventory[user_id]
-    except:
-        return {"action": "ask", "message": response.content}, sessions_inventory[user_id]
-
-class ChatRequest(BaseModel):
-    user_id: str
-    message: str
-
 @app.post("/chat")
-async def chat_endpoint(req: ChatRequest):
-    data, state = get_agent_response(req.user_id, req.message)
-    return {
-        "response": data["message"],
-        "recipes": data.get("recipes_with_images", []),
-        "inventory": state.ingredients
-    }
+async def chat_endpoint(request: Request):
+    try:
+        req = await request.json()
+        user_id = req.get("user_id", "chef_default")
+        message = req.get("message", "")
 
-app.mount("/", StaticFiles(directory=".", html=True), name="static")
+        if user_id not in sessions_inventory:
+            sessions_inventory[user_id] = KitchenState()
+            sessions_history[user_id] = ChatMessageHistory()
+
+        history = sessions_history[user_id]
+        current_inv = [i.dict() for i in sessions_inventory[user_id].ingredients]
+        
+        prompt = ChatPromptTemplate.from_messages([
+            ("system", SYSTEM_PROMPT),
+            MessagesPlaceholder(variable_name="chat_history"),
+            ("human", "{input}"),
+            ("system", f"SITUAZIONE ATTUALE: Dispensa: {json.dumps(current_inv)} | Persone: {sessions_inventory[user_id].num_people}")
+        ])
+
+        chain = prompt | llm
+        response = chain.invoke({"input": message, "chat_history": history.messages})
+        data = clean_extract_json(response.content)
+        
+        if "updated_pantry" in data:
+            sessions_inventory[user_id].ingredients = [Ingredient(**i) for i in data["updated_pantry"]]
+        
+        if data.get("num_people"):
+            sessions_inventory[user_id].num_people = data["num_people"]
+        
+        recipes = data.get("recipes", [])
+        if data.get("action") == "generate_recipes":
+            for r in recipes: r["image_url"] = fetch_dish_image(r["name"])
+
+        history.add_user_message(message)
+        history.add_ai_message(data.get("message", ""))
+
+        return {
+            "message": data.get("message", "Eccomi!"),
+            "recipes": recipes,
+            "inventory": [i.dict() for i in sessions_inventory[user_id].ingredients],
+            "num_people": sessions_inventory[user_id].num_people
+        }
+    except Exception as e:
+        return JSONResponse(status_code=500, content={"message": f"Errore: {str(e)}", "inventory": [], "recipes": []})
+
+@app.get("/")
+async def get_index(): return FileResponse("index.html")
+app.mount("/", StaticFiles(directory="."), name="static")
+
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run(app, host="0.0.0.0", port=8000)

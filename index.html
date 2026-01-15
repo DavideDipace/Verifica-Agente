@@ -3,31 +3,42 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Kitchen AI Agent</title>
+    <title>Chef AI Pro - Gestione Dispensa</title>
     <link rel="stylesheet" href="styles.css">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
 </head>
 <body>
     <div class="app-wrapper">
+        <!-- Sidebar con Tabella -->
         <aside class="sidebar">
             <div class="sidebar-header">
-                <h2>La tua Dispensa 🧊</h2>
+                <h2 id="people-count">Dispensa 🧊</h2>
             </div>
-            <ul id="pantry-list"></ul>
+            <div class="table-container">
+                <table id="pantry-table">
+                    <thead>
+                        <tr>
+                            <th>Prodotto</th>
+                            <th>Quantità</th>
+                            <th>Scadenza</th>
+                        </tr>
+                    </thead>
+                    <tbody id="pantry-body">
+                        <!-- Righe generate da script.js -->
+                        <tr><td colspan="3" class="empty-state">La dispensa è vuota</td></tr>
+                    </tbody>
+                </table>
+            </div>
         </aside>
-        
-        <main class="chat-container">
-            <header class="chat-header">
-                <h1>🧑‍🍳 Chef AI</h1>
-                <span class="status-dot"></span> online
-            </header>
-            
+
+        <!-- Area Chat -->
+        <main class="chat-area">
             <div id="chat-window">
-                <!-- I messaggi appariranno qui -->
+                <!-- Messaggi dello Chef e Ricette -->
             </div>
             
-            <div class="input-area">
-                <input type="text" id="user-input" placeholder="Scrivi gli ingredienti o chiedi una ricetta..." autocomplete="off">
+            <div class="input-container">
+                <input type="text" id="user-input" placeholder="Aggiungi prodotti o chiedi ricette..." autocomplete="off">
                 <button id="send-btn">Invia</button>
             </div>
         </main>

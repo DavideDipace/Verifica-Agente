@@ -1,144 +1,226 @@
+/* Variabili Globali per un design coerente */
 :root {
-    --primary: #27ae60;
-    --bg: #f8f9fa;
-    --dark: #2c3e50;
-    --user-msg: #dcf8c6;
-    --ai-msg: #ffffff;
+    --chef-primary: #27ae60;      /* Verde Chef */
+    --chef-dark: #2c3e50;         /* Testo scuro */
+    --bg-light: #f4f7f6;          /* Sfondo sidebar */
+    --bg-chat: #ece5dd;           /* Sfondo chat (stile WhatsApp) */
+    --user-bubble: #dcf8c6;       /* Verde chiaro utente */
+    --ai-bubble: #ffffff;         /* Bianco AI */
+    --warning: #e67e22;           /* Arancione per dati mancanti */
 }
 
-* { box-sizing: border-box; margin: 0; padding: 0; }
+/* Reset e Layout Base */
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
 
-body { 
-    font-family: 'Inter', sans-serif; 
-    background: var(--bg); 
-    color: var(--dark);
+body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    height: 100vh;
+    background-color: var(--bg-light);
+    overflow: hidden; /* Evita lo scroll dell'intera pagina */
 }
 
 .app-wrapper {
     display: flex;
-    height: 100vh;
-    overflow: hidden;
+    height: 100%;
+    width: 100%;
 }
 
-/* Sidebar */
+/* SIDEBAR: La tua Dispensa */
 .sidebar {
-    width: 320px;
-    background: #ffffff;
-    border-right: 1px solid #e0e0e0;
+    width: 380px;
+    background: white;
+    border-right: 1px solid #ddd;
     display: flex;
     flex-direction: column;
+    box-shadow: 2px 0 10px rgba(0,0,0,0.05);
+    z-index: 10;
 }
 
 .sidebar-header {
     padding: 25px;
-    background: var(--primary);
+    background: var(--chef-primary);
     color: white;
+    text-align: center;
 }
 
-#pantry-list {
-    list-style: none;
-    padding: 15px;
+.sidebar-header h2 {
+    font-size: 1.2rem;
+    font-weight: 600;
+}
+
+.table-container {
+    flex: 1;
     overflow-y: auto;
+    padding: 15px;
 }
 
-.pantry-item {
-    background: #f1f3f5;
-    padding: 12px;
-    border-radius: 8px;
-    margin-bottom: 10px;
-    border-left: 4px solid var(--primary);
+table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.85rem;
 }
 
-.ing-name { font-weight: 600; display: block; }
-.ing-qty { color: #666; font-size: 0.9em; }
-.ing-expiry { font-size: 0.75em; color: #e74c3c; margin-top: 5px; }
+th {
+    text-align: left;
+    padding: 12px 8px;
+    border-bottom: 2px solid var(--chef-primary);
+    color: #777;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
 
-/* Chat Section */
-.chat-container {
+td {
+    padding: 12px 8px;
+    border-bottom: 1px solid #eee;
+    color: var(--chef-dark);
+}
+
+/* Evidenziazione punti di domanda (?) */
+.missing {
+    color: var(--warning);
+    font-weight: bold;
+    background: #fff3e0;
+    padding: 2px 6px;
+    border-radius: 4px;
+}
+
+/* CHAT AREA: Conversazione */
+.chat-area {
     flex: 1;
     display: flex;
     flex-direction: column;
+    background-color: var(--bg-chat);
+    position: relative;
 }
-
-.chat-header {
-    padding: 15px 25px;
-    background: white;
-    box-shadow: 0 2px 5px rgba(0,0,0,0.05);
-    display: flex;
-    align-items: center;
-    gap: 10px;
-}
-
-.status-dot { width: 10px; height: 10px; background: #2ecc71; border-radius: 50%; }
 
 #chat-window {
     flex: 1;
-    padding: 25px;
+    padding: 20px;
     overflow-y: auto;
     display: flex;
     flex-direction: column;
-    gap: 15px;
-    background: #e5ddd5; /* Chat background classico */
+    gap: 12px;
 }
 
-.msg-wrapper { display: flex; width: 100%; }
-.msg-wrapper.user { justify-content: flex-end; }
-
+/* Fumetti dei Messaggi */
 .msg-bubble {
-    max-width: 70%;
+    max-width: 75%;
     padding: 12px 18px;
     border-radius: 15px;
-    font-size: 0.95em;
-    line-height: 1.4;
+    font-size: 0.95rem;
+    line-height: 1.5;
     box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+    position: relative;
+    word-wrap: break-word;
 }
 
-.user .msg-bubble { background: var(--user-msg); border-top-right-radius: 2px; }
-.ai .msg-bubble { background: var(--ai-msg); border-top-left-radius: 2px; }
+.ai {
+    background: var(--ai-bubble);
+    align-self: flex-start;
+    border-top-left-radius: 2px;
+    color: var(--chef-dark);
+}
 
-/* Input */
-.input-area {
+.user {
+    background: var(--user-bubble);
+    align-self: flex-end;
+    border-top-right-radius: 2px;
+    color: #333;
+}
+
+/* RICETTE: Card con immagini */
+.recipe-card {
+    display: flex;
+    background: white;
+    border-radius: 12px;
+    margin: 10px 0;
+    overflow: hidden;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+    border-left: 6px solid var(--chef-primary);
+    max-width: 85%;
+    animation: slideIn 0.3s ease-out;
+}
+
+.recipe-card img {
+    width: 100px;
+    height: 100px;
+    object-fit: cover; /* Mantiene le proporzioni della foto */
+    background: #eee;
+}
+
+.recipe-card .info {
+    padding: 12px;
+    flex: 1;
+}
+
+.recipe-card h3 {
+    font-size: 1rem;
+    color: var(--chef-primary);
+    margin-bottom: 5px;
+}
+
+.recipe-card p {
+    font-size: 0.8rem;
+    color: #555;
+    line-height: 1.4;
+    white-space: pre-line; /* Rispetta gli "a capo" nelle ricette */
+}
+
+/* AREA INPUT: Barra di scrittura */
+.input-bar {
     padding: 20px;
     background: white;
     display: flex;
     gap: 12px;
+    border-top: 1px solid #ddd;
 }
 
-input {
+#user-input {
     flex: 1;
     padding: 12px 20px;
-    border: 1px solid #ddd;
     border-radius: 25px;
+    border: 1px solid #ccc;
     outline: none;
+    font-size: 0.95rem;
+    transition: border-color 0.2s;
 }
 
-button {
-    padding: 0 25px;
-    background: var(--primary);
+#user-input:focus {
+    border-color: var(--chef-primary);
+}
+
+#send-btn {
+    background: var(--chef-primary);
     color: white;
     border: none;
+    padding: 0 25px;
     border-radius: 25px;
     cursor: pointer;
     font-weight: 600;
-    transition: 0.3s;
+    transition: background 0.2s;
 }
 
-button:hover { background: #219150; }
-
-/* Recipes Cards */
-.recipe-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-    gap: 15px;
-    margin-top: 5px;
+#send-btn:hover {
+    background: #219150;
 }
 
-.recipe-card {
-    background: white;
-    border-radius: 10px;
-    overflow: hidden;
-    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+/* Animazioni */
+@keyframes slideIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
 }
 
-.recipe-card img { width: 100%; height: 100px; object-fit: cover; }
-.card-info { padding: 8px; font-size: 0.8em; text-align: center; }
+/* Responsività per schermi piccoli */
+@media (max-width: 800px) {
+    .app-wrapper {
+        flex-direction: column;
+    }
+    .sidebar {
+        width: 100%;
+        height: 250px;
+    }
+}
